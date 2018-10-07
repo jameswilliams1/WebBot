@@ -1,33 +1,28 @@
 from flask_wtf import Form
-from wtforms import TextField, PasswordField
-from wtforms.validators import DataRequired, EqualTo, Length
+from wtforms import TextField, RadioField
+from wtforms.validators import DataRequired, EqualTo, Length, Optional
 
 # Set your classes here.
 
 
-class RegisterForm(Form):
-    name = TextField(
-        'Username', validators=[DataRequired(), Length(min=6, max=25)]
+class SiteForm(Form):
+    website = TextField(
+        'Web Address', validators=[DataRequired()]
     )
-    email = TextField(
-        'Email', validators=[DataRequired(), Length(min=6, max=40)]
+    xpath = TextField(
+        'XPath (optional)', validators=[Optional()]
     )
-    password = PasswordField(
-        'Password', validators=[DataRequired(), Length(min=6, max=40)]
-    )
-    confirm = PasswordField(
-        'Repeat Password',
-        [DataRequired(),
-        EqualTo('password', message='Passwords must match')]
+    threads = TextField(
+        'Max Active Threads', validators=[DataRequired()]
     )
 
 
-class LoginForm(Form):
-    name = TextField('Username', [DataRequired()])
-    password = PasswordField('Password', [DataRequired()])
+class ProxyForm(Form):
+    ip = TextField('IP Address', [DataRequired()])
+    port = TextField('Port', [DataRequired()])
 
 
-class ForgotForm(Form):
+class ScriptForm(Form):
     email = TextField(
         'Email', validators=[DataRequired(), Length(min=6, max=40)]
     )
