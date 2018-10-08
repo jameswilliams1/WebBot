@@ -8,12 +8,14 @@ import logging
 from logging import Formatter, FileHandler
 from forms import *
 import os
+import OpenSite
 
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "12345678910"
 app.config.from_object('config')
 #db = SQLAlchemy(app)
 
@@ -41,9 +43,16 @@ def login_required(test):
 #----------------------------------------------------------------------------#
 
 
-@app.route('/')
+@app.route('/', methods=('GET', 'POST'))
 def home():
     form = SiteForm(request.form)
+    if form.validate_on_submit():
+        site = form.website.data
+        threads = form.threads.data
+        xpath = form.xpath.data
+        OpenSite.update_site(site)
+        OpenSite.update_target(xpath)
+        flash("Details Saved")
     return render_template('pages/home.html', form=form)
 
 
@@ -55,6 +64,16 @@ def proxy():
 @app.route('/script')
 def script():
     return render_template('pages/script.html')
+
+
+@app.route('/run')
+def run():
+    #OpenSite.printall()
+    try:
+        OpenSite.run()
+    except:
+        pass
+    return redirect("/")#render_template('pages/run.html')
 
 
 # Error handlers.

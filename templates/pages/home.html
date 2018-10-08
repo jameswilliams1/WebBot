@@ -5,11 +5,12 @@
 <div class="page-header">
   <h1>Website Settings</h1>
 </div>
-<form method="post" class="form">
-    {{ form.website(class_ = 'form-control first-input last-input', placeholder = form.website.label.text) }}
+<form method="POST" class="form" action="/">
+    {{ form.csrf_token }}
+    {{ form.website(class_ = 'form-control first-input last-input', placeholder = form.website.label.text, required=true) }}
     {{ form.xpath(class_ = 'form-control first-input last-input', placeholder = form.xpath.label.text) }}
-    {{ form.threads(class_ = 'form-control first-input last-input', placeholder = form.threads.label.text) }}
-    <input type="submit" value="Submit" class="btn btn-lg btn-primary btn-block" disabled>
+    {{ form.threads(class_ = 'form-control first-input last-input', placeholder = form.threads.label.text, required=true) }}
+    <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block">
   </form>
 
 {% endblock %}
