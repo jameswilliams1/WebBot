@@ -9,7 +9,9 @@
     {{ form.csrf_token }}
     {{ form.website(class_ = 'form-control first-input last-input', placeholder = form.website.label.text, required=true) }}
     {{ form.xpath(class_ = 'form-control first-input last-input', placeholder = form.xpath.label.text) }}
-    {{ form.threads(class_ = 'form-control first-input last-input', placeholder = form.threads.label.text, required=true) }}
+    {{ form.threads(class_ = 'form-control first-input last-input', placeholder = form.threads.label.text, required=true, type="number", min="0", step="1") }}
+    {{ form.time_min(class_ = 'form-control first-input last-input', placeholder = form.time_min.label.text, required=true, type="number", min="0", step="1") }}
+    {{ form.time_max(class_ = 'form-control first-input last-input', placeholder = form.time_max.label.text, required=true, type="number", min="0", step="1") }}
     <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block">
   </form>
 

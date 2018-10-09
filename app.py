@@ -9,6 +9,7 @@ from logging import Formatter, FileHandler
 from forms import *
 import os
 import OpenSite
+from threading import Thread
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -46,13 +47,16 @@ def login_required(test):
 @app.route('/', methods=('GET', 'POST'))
 def home():
     form = SiteForm(request.form)
-    if form.validate_on_submit():
-        site = form.website.data
-        threads = form.threads.data
-        xpath = form.xpath.data
-        OpenSite.update_site(site)
-        OpenSite.update_target(xpath)
-        flash("Details Saved")
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            OpenSite.update_site(form.website.data)
+            OpenSite.update_target(form.xpath.data)
+            OpenSite.update_threads(form.threads.data)
+            OpenSite.update_min(form.time_min.data)
+            OpenSite.update_max(form.time_max.data)
+            flash("Details saved")
+        else:
+            flash("There was a problem with the details submitted")
     return render_template('pages/home.html', form=form)
 
 
@@ -68,12 +72,12 @@ def script():
 
 @app.route('/run')
 def run():
-    #OpenSite.printall()
     try:
-        OpenSite.run()
+        bg = Thread(OpenSite.run_threads())
+
     except:
         pass
-    return redirect("/")#render_template('pages/run.html')
+    return redirect("/")
 
 
 # Error handlers.
@@ -88,6 +92,7 @@ def internal_error(error):
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
+
 
 if not app.debug:
     file_handler = FileHandler('error.log')

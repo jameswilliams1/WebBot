@@ -1,9 +1,8 @@
 from selenium import webdriver
 from time import sleep
-from random import randrange
-from random import choice
-from selenium.common.exceptions import StaleElementReferenceException
-from selenium.common.exceptions import InvalidSelectorException
+from random import randrange, choice
+from selenium.common.exceptions import StaleElementReferenceException, InvalidSelectorException
+from threading import Thread, Event
 
 
 def rand(min_time, max_time):
@@ -82,29 +81,76 @@ def random_actions(driver, max_count):
 
 site = ""
 target = ""
+max_threads = 1
+active_threads = 0
+min_time = 0
+max_time = 0
 
 
-def update_site(string):
+def update_site(new_site):
     global site
-    site = string
+    site = new_site
 
 
-def update_target(string):
+def update_target(new_target):
     global target
-    target = string
+    target = new_target
 
 
-def run():
-    print("Bot started on page: " + site)
-    print (site)
-    print(target)
-    driver = webdriver.Chrome()
-    driver.get(site)
-    # driver.maximize_window()
-    sleep(rand(5, 10))
-    random_actions(driver, 15)
-    #click_target(driver, target)
-    random_actions(driver, 6)
-    sleep(rand(5, 10))
-    driver.close()
-    print("Success: Closed browser.")
+def update_threads(new_count):
+    global max_threads
+    max_threads = new_count
+
+
+def update_min(new_min):
+    global min_time
+    min_time = new_min
+
+
+def update_max(new_max):
+    global max_time
+    max_time = new_max
+
+
+class Worker(Thread):
+    address = site
+    xpath = target
+
+    def __init__(self):
+        super(Worker, self).__init__()
+        self._stop_event = Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+    def run(self):
+        print("Bot started on page: " + site)
+        driver = webdriver.Chrome()
+        driver.get(site)
+        # driver.maximize_window()
+        sleep(rand(5, 10))
+        #random_actions(driver, 15)
+        # click_target(driver, target)
+        #random_actions(driver, 6)
+        #sleep(rand(5, 10))
+        driver.close()
+        global active_threads
+        active_threads -= 1
+        print("Success: Closed browser.")
+
+
+def run_threads():
+    threads = []
+    while 1:
+        global active_threads
+        if active_threads < max_threads:
+            thread = Worker()
+            thread.start()
+            active_threads += 1
+            threads.append(thread)
+            print(str(active_threads) + " bots are active")
+
+
