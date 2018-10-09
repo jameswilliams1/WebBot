@@ -85,6 +85,15 @@ max_threads = 1
 active_threads = 0
 min_time = 0
 max_time = 0
+proxy_type = ""
+chrome_options = webdriver.ChromeOptions()
+proxy_list = []
+windows = True
+
+
+def show_windows(new_status):
+    global windows
+    windows = new_status
 
 
 def update_site(new_site):
@@ -112,13 +121,40 @@ def update_max(new_max):
     max_time = new_max
 
 
+def update_proxy(new_proxy):
+    global proxy_type
+    proxy_type = new_proxy
+
+
+def clear_proxy():
+    chrome_options.arguments.clear()
+    proxy_list.clear()
+
+
+def change_proxy(ip, port):
+    clear_proxy()
+    proxy_arg = ip + ":" + str(port)
+    chrome_options.add_argument('--proxy-server=%s' % proxy_arg)
+
+
+def make_proxy_list(filepath):
+    clear_proxy()
+    with open(filepath) as f:
+        proxies = f.readlines()
+    proxies = [x.strip() for x in proxies]
+    global proxy_list
+    for p in proxies:
+        proxy_list.append(webdriver.ChromeOptions.add_argument('--proxy-server=%s' % p))
+
+
 class Worker(Thread):
     address = site
     xpath = target
 
-    def __init__(self):
+    def __init__(self, options):
         super(Worker, self).__init__()
         self._stop_event = Event()
+        self.options = options
 
     def stop(self):
         self._stop_event.set()
@@ -128,7 +164,7 @@ class Worker(Thread):
 
     def run(self):
         print("Bot started on page: " + site)
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome(chrome_options=self.options)
         driver.get(site)
         # driver.maximize_window()
         sleep(rand(5, 10))
@@ -143,14 +179,24 @@ class Worker(Thread):
 
 
 def run_threads():
-    threads = []
+    global active_threads
+    active_threads = 0
     while 1:
-        global active_threads
-        if active_threads < max_threads:
-            thread = Worker()
+        if len(proxy_list) == 0 and active_threads < max_threads:
+            thread = Worker(chrome_options)
             thread.start()
             active_threads += 1
-            threads.append(thread)
             print(str(active_threads) + " bots are active")
+        elif len(proxy_list) != 0 and active_threads < max_threads:
+            for p in proxy_list:
+                thread = Worker(p)
+                thread.start()
+                active_threads += 1
+                print(str(active_threads) + " bots are active")
+
+
+
+
+
 
 

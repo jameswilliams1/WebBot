@@ -5,9 +5,10 @@
 <div class="page-header">
   <h1>Proxy Settings</h1>
 </div>
-<form method="POST" class="form" action="/proxy">
+    <p>The proxy list file should have one proxy on each line in the format: http://host:port</p>
+<form method="POST" class="form" action="/list">
     {{ form.csrf_token }}
-    {{ form.proxy_type(class_ = 'form-control first-input last-input', placeholder = form.proxy_type.label.text, required=true) }}
+    {{ form.list_file(class_ = 'form-control first-input last-input', placeholder = form.list_file.label.text, required=true) }}
     <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block">
   </form>
 

@@ -54,15 +54,48 @@ def home():
             OpenSite.update_threads(form.threads.data)
             OpenSite.update_min(form.time_min.data)
             OpenSite.update_max(form.time_max.data)
-            flash("Details saved")
+            flash("Website details saved")
+            return redirect('/proxy')
         else:
             flash("There was a problem with the details submitted")
     return render_template('pages/home.html', form=form)
 
 
-@app.route('/proxy')
+@app.route('/proxy', methods=('GET', 'POST'))
 def proxy():
-    return render_template('pages/proxy.html')
+    form = ProxyForm(request.form)
+    if request.method == 'POST' and form.validate_on_submit():
+        choice = form.proxy_type.data
+        OpenSite.update_proxy(choice)
+        if choice == 'none':
+            OpenSite.clear_proxy()
+            flash('Proxy details saved')
+            return redirect('/script')
+        if choice == 'list':
+            return redirect('/list')
+        if choice == 'rotating':
+            return redirect('/rotating')
+    return render_template('pages/proxy.html', form=form)
+
+
+@app.route('/list', methods=('GET', 'POST'))
+def listp():
+    form = ListForm(request.form)
+    if request.method == 'POST' and form.validate_on_submit():
+        address = form.list_file.data
+        flash('Proxy details saved')
+        return redirect('/script')
+    return render_template('pages/list.html', form=form)
+
+
+@app.route('/rotating', methods=('GET', 'POST'))
+def rotating():
+    form = RotatingForm(request.form)
+    if request.method == 'POST' and form.validate_on_submit():
+        OpenSite.change_proxy(form.ip.data, form.port.data)
+        flash('Proxy details saved')
+        return redirect('/script')
+    return render_template('pages/rotating.html', form=form)
 
 
 @app.route('/script')
@@ -73,7 +106,7 @@ def script():
 @app.route('/run')
 def run():
     try:
-        bg = Thread(OpenSite.run_threads())
+        OpenSite.run_threads()
 
     except:
         pass

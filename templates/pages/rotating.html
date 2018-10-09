@@ -1,0 +1,15 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Proxy Settings{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Proxy Settings</h1>
+</div>
+<form method="POST" class="form" action="/rotating">
+    {{ form.csrf_token }}
+    {{ form.ip(class_ = 'form-control first-input last-input', placeholder = form.ip.label.text, required=true) }}
+    {{ form.port(class_ = 'form-control first-input last-input', placeholder = form.port.label.text, required=true, type="number", min="0", step="1") }}
+    <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block">
+  </form>
+
+{% endblock %}
