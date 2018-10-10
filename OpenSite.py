@@ -3,6 +3,7 @@ from time import sleep
 from random import randrange, choice
 from selenium.common.exceptions import StaleElementReferenceException, InvalidSelectorException
 from threading import Thread, Event
+import string
 
 
 def rand(min_time, max_time):
@@ -82,13 +83,43 @@ def random_actions(driver, max_count):
 site = ""
 target = ""
 max_threads = 1
-active_threads = 0
 min_time = 0
 max_time = 0
+active_threads = 0
 proxy_type = ""
 chrome_options = webdriver.ChromeOptions()
 proxy_list = []
 windows = True
+script = []
+
+min_pause_time = 0
+max_pause_time = 0
+scroll_count = 0
+key_press = ""
+click_count = 0
+parameters_set = False
+
+
+def random_key():
+    all_keys = string.ascii_letters + string.digits
+    return choice(all_keys)
+
+
+def set_parameters(min_pause_time_in, max_pause_time_in, scroll_count_in, key_press_in, click_count_in):
+    global min_pause_time, max_pause_time, scroll_count, key_press, click_count, parameters_set
+    min_pause_time = int(min_pause_time_in)
+    max_pause_time = int(max_pause_time_in)
+    scroll_count = int(scroll_count_in)
+    key_press = str(key_press_in)
+    click_count = int(click_count_in)
+    print(min_pause_time, max_pause_time, scroll_count, key_press, click_count)
+
+
+def make_script(*args):
+    global script
+    script.clear()
+    for a in args:
+        script.append(a)
 
 
 def show_windows(new_status):

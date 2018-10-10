@@ -99,9 +99,17 @@ def rotating():
     return render_template('pages/rotating.html', form=form)
 
 
-@app.route('/script')
+@app.route('/script', methods=('GET', 'POST'))
 def script():
-    return render_template('pages/script.html')
+    form = ScriptForm(request.form)
+    if request.method == 'POST' and form.validate_on_submit():
+        key_to_press = form.key_press.data
+        if len(key_to_press) == 0:
+            key_to_press = OpenSite.random_key()
+        OpenSite.set_parameters(form.pause_time_min.data, form.pause_time_max.data, form.scroll_count.data, key_to_press, form.click_count.data)
+
+        flash("Settings saved")
+    return render_template('pages/script.html', form=form)
 
 
 @app.route('/run')

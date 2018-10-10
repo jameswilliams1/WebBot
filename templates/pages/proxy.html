@@ -8,7 +8,7 @@
 <form method="POST" class="form" action="/proxy">
     {{ form.csrf_token }}
     {{ form.proxy_type(class_ = 'form-control first-input last-input', placeholder = form.proxy_type.label.text, required=true) }}
-    <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block">
+    <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block"/>
   </form>
 
 {% endblock %}

@@ -27,4 +27,8 @@ class ListForm(FlaskForm):
 
 
 class ScriptForm(FlaskForm):
-    email = StringField('Email')
+    pause_time_min = IntegerField("Minimum pause time (seconds)")
+    pause_time_max = IntegerField("Maximum pause time (seconds)")
+    scroll_count = IntegerField("Number of scroll actions to perform")
+    key_press = StringField("Enter key to press (leave blank for random)")
+    click_count = IntegerField("Number of left click actions to perform")
