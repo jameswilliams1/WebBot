@@ -82,7 +82,7 @@ def proxy():
 def listp():
     form = ListForm(request.form)
     if request.method == 'POST' and form.validate_on_submit():
-        address = form.list_file.data
+        OpenSite.make_proxy_list(form.list_file.data)
         flash('Proxy details saved')
         return redirect('/script')
     return render_template('pages/list.html', form=form)

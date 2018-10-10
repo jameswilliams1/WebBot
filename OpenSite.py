@@ -139,12 +139,10 @@ def change_proxy(ip, port):
 
 def make_proxy_list(filepath):
     clear_proxy()
-    with open(filepath) as f:
-        proxies = f.readlines()
-    proxies = [x.strip() for x in proxies]
     global proxy_list
-    for p in proxies:
-        proxy_list.append(webdriver.ChromeOptions.add_argument('--proxy-server=%s' % p))
+    with open(filepath) as f:
+        address_list = f.read().splitlines()
+    proxy_list = ['--proxy-server=%s' % p for p in address_list]
 
 
 class Worker(Thread):
@@ -167,6 +165,7 @@ class Worker(Thread):
         driver = webdriver.Chrome(chrome_options=self.options)
         driver.get(site)
         # driver.maximize_window()
+        sleep(100)
         sleep(rand(5, 10))
         #random_actions(driver, 15)
         # click_target(driver, target)
@@ -181,6 +180,8 @@ class Worker(Thread):
 def run_threads():
     global active_threads
     active_threads = 0
+    if not windows:
+        chrome_options.add_argument("--headless")
     while 1:
         if len(proxy_list) == 0 and active_threads < max_threads:
             thread = Worker(chrome_options)
@@ -189,12 +190,18 @@ def run_threads():
             print(str(active_threads) + " bots are active")
         elif len(proxy_list) != 0 and active_threads < max_threads:
             for p in proxy_list:
-                thread = Worker(p)
+                chrome_options.arguments.clear()
+                chrome_options.add_argument(p)
+                if not windows:
+                    chrome_options.add_argument("--headless")
+                while active_threads == max_threads:
+                    sleep(5)
+                thread = Worker(chrome_options)
                 thread.start()
                 active_threads += 1
                 print(str(active_threads) + " bots are active")
-
-
+        else:
+            sleep(10)
 
 
 
