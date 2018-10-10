@@ -7,12 +7,18 @@
 </div>
     <form method="POST" class="form" action="/script">
      {{ form.csrf_token }}
+    <p>Choose script items:</p>
+        {% for entry in form.script_items %}
+        {{ entry(class_ = 'form-control first-input last-input') }}
+    {% endfor %}
+    <input type="submit" value="Add item" name="submit" class="btn btn-lg btn-primary btn-block" formnovalidate/>
+    <br/><br/>
     {{ form.pause_time_min(class_ = 'form-control first-input last-input', placeholder = form.pause_time_min.label.text, required=true, type="number", min="0", step="1") }}
     {{ form.pause_time_max(class_ = 'form-control first-input last-input', placeholder = form.pause_time_max.label.text, required=true, type="number", min="0", step="1") }}
     {{ form.scroll_count(class_ = 'form-control first-input last-input', placeholder = form.scroll_count.label.text, required=true, type="number", min="0", step="1") }}
     {{ form.key_press(class_ = 'form-control first-input last-input', placeholder = form.key_press.label.text, pattern="[a-zA-Z0-9]") }}
         {{ form.click_count(class_ = 'form-control first-input last-input', placeholder = form.click_count.label.text, required=true, type="number", min="0", step="1") }}
-    <input type="submit" value="Save" class="btn btn-lg btn-primary btn-block"/>
+    <input type="submit" value="Save" name="submit" class="btn btn-lg btn-primary btn-block"/>
   </form>
 
 

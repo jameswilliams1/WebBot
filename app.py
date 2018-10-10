@@ -102,12 +102,18 @@ def rotating():
 @app.route('/script', methods=('GET', 'POST'))
 def script():
     form = ScriptForm(request.form)
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.form.get("submit") == "Add item":
+        if len(form.script_items.data) == form.script_items.max_entries:
+            flash("Maximum number of items is %d" %form.script_items.max_entries)
+            return render_template('pages/script.html', form=form)
+        form.script_items.append_entry()
+        return render_template('pages/script.html', form=form)
+    elif request.form.get("submit") == 'Save' and form.validate_on_submit():
         key_to_press = form.key_press.data
         if len(key_to_press) == 0:
             key_to_press = OpenSite.random_key()
         OpenSite.set_parameters(form.pause_time_min.data, form.pause_time_max.data, form.scroll_count.data, key_to_press, form.click_count.data)
-
+        OpenSite.update_script(form.script_items.data)
         flash("Settings saved")
     return render_template('pages/script.html', form=form)
 

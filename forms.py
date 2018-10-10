@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SelectField, FileField, BooleanField
+from wtforms import StringField, IntegerField, SelectField, FileField, BooleanField, FieldList
 
 # Set your classes here.
 
@@ -27,6 +27,9 @@ class ListForm(FlaskForm):
 
 
 class ScriptForm(FlaskForm):
+    script_items = FieldList(SelectField("Choose action: ", choices=[('none', ''), ('pause', 'Pause'), ('scroll_up', 'Scroll up'), ('scroll_down', 'Scroll down'), ('press_key', 'Press key'), ('left_click', 'Left click')]), min_entries=1, max_entries=25)
+
+
     pause_time_min = IntegerField("Minimum pause time (seconds)")
     pause_time_max = IntegerField("Maximum pause time (seconds)")
     scroll_count = IntegerField("Number of scroll actions to perform")

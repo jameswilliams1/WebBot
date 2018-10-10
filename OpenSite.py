@@ -115,11 +115,10 @@ def set_parameters(min_pause_time_in, max_pause_time_in, scroll_count_in, key_pr
     print(min_pause_time, max_pause_time, scroll_count, key_press, click_count)
 
 
-def make_script(*args):
+def update_script(new_script):
     global script
     script.clear()
-    for a in args:
-        script.append(a)
+    script = list(filter(lambda x: x != 'none', new_script))
 
 
 def show_windows(new_status):
