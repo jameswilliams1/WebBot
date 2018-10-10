@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SelectField, FileField
+from wtforms import StringField, IntegerField, SelectField, FileField, BooleanField
 
 # Set your classes here.
 
@@ -10,6 +10,7 @@ class SiteForm(FlaskForm):
     threads = IntegerField('Max active threads')
     time_min = IntegerField('Minimum thread time (seconds)')
     time_max = IntegerField('Maximum thread time (seconds)')
+    display_windows = BooleanField("Display browser windows? ")
 
 
 class ProxyForm(FlaskForm):

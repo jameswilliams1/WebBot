@@ -54,6 +54,7 @@ def home():
             OpenSite.update_threads(form.threads.data)
             OpenSite.update_min(form.time_min.data)
             OpenSite.update_max(form.time_max.data)
+            OpenSite.show_windows(form.display_windows.data)
             flash("Website details saved")
             return redirect('/proxy')
         else:
