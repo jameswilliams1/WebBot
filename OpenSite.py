@@ -19,7 +19,7 @@ def rand(min_time, max_time):
 def find_all(driver):
     """Gets all elements of page inside body that aren't scripts or styles"""
     body_children = driver.find_elements_by_xpath("//body//*")
-    body_children = filter(lambda element: element.tag_name != "style" and element.tag_name != "script", body_children)
+    body_children = list(filter(lambda element: element.tag_name != "style" and element.tag_name != "script", body_children))
     return body_children
 
 
