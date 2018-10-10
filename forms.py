@@ -27,7 +27,7 @@ class ListForm(FlaskForm):
 
 
 class ScriptForm(FlaskForm):
-    script_items = FieldList(SelectField("Choose action: ", choices=[('none', ''), ('pause', 'Pause'), ('scroll_up', 'Scroll up'), ('scroll_down', 'Scroll down'), ('press_key', 'Press key'), ('left_click', 'Left click')]), min_entries=1, max_entries=25)
+    script_items = FieldList(SelectField("Choose action: ", choices=[('none', ''), ('sleep', 'Pause'), ('scroll_up', 'Scroll up'), ('scroll_down', 'Scroll down'), ('press_key', 'Press key'), ('left_click', 'Left click')]), min_entries=1, max_entries=25)
 
 
     pause_time_min = IntegerField("Minimum pause time (seconds)")

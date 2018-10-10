@@ -1,9 +1,31 @@
 from selenium import webdriver
 from time import sleep
 from random import randrange, choice
-from selenium.common.exceptions import StaleElementReferenceException, InvalidSelectorException
+from selenium.common.exceptions import StaleElementReferenceException, InvalidSelectorException, ElementNotVisibleException, WebDriverException
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 from threading import Thread, Event
 import string
+
+
+site = ""
+target = ""
+max_threads = 0
+min_time = 0
+max_time = 0
+active_threads = 0
+proxy_type = ""
+chrome_options = webdriver.ChromeOptions()
+proxy_list = []
+windows = True
+script = []
+min_pause_time = 0
+max_pause_time = 0
+scroll_count = 0
+key_to_press = ""
+click_count = 0
+id_of_elements = []
+class_of_elements = []
 
 
 def rand(min_time, max_time):
@@ -16,25 +38,93 @@ def rand(min_time, max_time):
     return min_time + randrange(0, (max_time-min_time) * 1000) / 1000
 
 
-def find_all(driver):
-    """Gets all elements of page inside body that aren't scripts or styles"""
-    body_children = driver.find_elements_by_xpath("//body//*")
-    body_children = list(filter(lambda element: element.tag_name != "style" and element.tag_name != "script", body_children))
-    return body_children
+def get_non_links(driver, address):
+    actions = ActionChains(driver)
+    # Find elements in body that have an ID
+    driver.get(address)
+    elements_with_id = driver.find_elements_by_xpath("//body//*[@id]")
+    elements_ids = []
+    same_page_ids = []
+    for e in elements_with_id:
+        elements_ids.append(e.get_attribute('id'))
+    # Remove duplicates
+    elements_ids = list(set(elements_ids))
+    for e_id in elements_ids:
+        try:
+            # Following sequence will fail if page changes
+            e = driver.find_element_by_id(e_id)
+            actions.move_to_element(e)
+            e.click()
+            sleep(rand(1, 2))
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            sleep(rand(1, 2))
+            e.click()
+            sleep(rand(1, 2))
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            same_page_ids.append(e.get_attribute('id'))
+        except StaleElementReferenceException:
+            driver.execute_script("window.history.go(-1)")
+            sleep(rand(2, 3))
+        except (ElementNotVisibleException, WebDriverException):
+            pass
+    driver.get(address)
+    # Find links with a class
+    links = driver.find_elements_by_xpath('//body//a[@class]')
+    link_class = []
+    for e in links:
+            link_class.append(e.get_attribute('class'))
+    link_class = list(set(link_class))
+    same_page_link_class = []
+    for this_class in link_class:
+        try:
+            element = driver.find_element_by_class_name(this_class)
+            actions.move_to_element(element)
+            element.click()
+            sleep(rand(1, 2))
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            element.click()
+            sleep(rand(1, 2))
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            same_page_link_class.append(this_class)
+        except StaleElementReferenceException:
+            driver.execute_script("window.history.go(-1)")
+            sleep(rand(2, 3))
+        except (ElementNotVisibleException, WebDriverException):
+            pass
+        driver.close()
+        global id_of_elements, class_of_elements
+        id_of_elements = same_page_ids
+        class_of_elements = same_page_link_class
 
 
-def scroll(driver, count):
-    """Scrolls down and up with random waits to random (within range) locations count times.
+def scroll_up(driver, count):
+    """Scrolls up/down with random waits to random (within range) locations count times.
     :param driver:
     :param count:
     """
     for i in range(0, count):
-        sleep(rand(3, 10))
-        driver.execute_script("window.scrollTo(0,%d);" % rand(500, 5000))
-        print("Scrolled down")
-        sleep(rand(3, 10))
+        sleep(rand(2, 5))
         driver.execute_script("window.scrollTo(0,%d);" % rand(0, 200))
         print("Scrolled up")
+
+
+def scroll_down(driver, count):
+    """Scrolls up/down with random waits to random (within range) locations count times.
+    :param driver:
+    :param count:
+    """
+    for i in range(0, count):
+        sleep(rand(2, 5))
+        driver.execute_script("window.scrollTo(0,%d);" % rand(2000, 5000))
+        print("Scrolled down")
+
+
+def press_key(driver):
+    global key_to_press, non_link_elements
+    sleep(rand(2, 5))
+    target_element = choice(non_link_elements)
+    driver.find_element_by_xpath().send_keys(key_to_press)
+    print("Pressed %d key" % key_to_press)
 
 
 def click_random(driver, count):
@@ -59,7 +149,7 @@ def click_random(driver, count):
 
 def click_target(driver, xpath):
     """Finds and clicks a specific element by its XPath."""
-    sleep(rand(3, 5))
+    sleep(rand(2, 5))
     try:
         target = driver.find_element_by_xpath(xpath)
         target.click()
@@ -67,37 +157,15 @@ def click_target(driver, xpath):
     except InvalidSelectorException as e:
         print("Failed to click target element:")
         print(e)
-    finally:
-        sleep(rand(5, 10))
 
 
 def random_actions(driver, max_count):
     """Pick a random function and run it with a random 1-3 count input a random amount of times between max_count and
     max_count/2"""
-    functions = [scroll, click_random]
+    functions = [click_random]
     for i in range(0, round(max_count/2) + randrange(0, round(max_count/2))):
         random_choice = choice(functions)
         random_choice(driver, randrange(1, 3))
-
-
-site = ""
-target = ""
-max_threads = 1
-min_time = 0
-max_time = 0
-active_threads = 0
-proxy_type = ""
-chrome_options = webdriver.ChromeOptions()
-proxy_list = []
-windows = True
-script = []
-
-min_pause_time = 0
-max_pause_time = 0
-scroll_count = 0
-key_press = ""
-click_count = 0
-parameters_set = False
 
 
 def random_key():
