@@ -91,7 +91,7 @@ def script():
         key_to_press = form.key_press.data
         if len(key_to_press) == 0:
             key_to_press = OpenSite.random_key()
-        OpenSite.set_parameters(form.pause_time_min.data, form.pause_time_max.data, form.scroll_count.data, key_to_press, form.click_count.data)
+        OpenSite.set_parameters(int(form.pause_time_min.data), int(form.pause_time_max.data), int(form.scroll_count.data), str(key_to_press), int(form.click_count.data))
         OpenSite.update_script(form.script_items.data)
         flash("Settings saved")
     return render_template('pages/script.html', form=form)
@@ -101,7 +101,6 @@ def script():
 def run():
     try:
         OpenSite.run_threads()
-
     except:
         pass
     return redirect("/")
@@ -112,7 +111,6 @@ def run():
 
 @app.errorhandler(500)
 def internal_error(error):
-    #db_session.rollback()
     return render_template('errors/500.html'), 500
 
 
