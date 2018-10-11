@@ -25,6 +25,7 @@ key_to_press = ""
 click_count = 0
 id_of_elements = []
 class_of_elements = []
+bot_count = 0
 
 
 def rand(min_time, max_time):
@@ -59,17 +60,14 @@ def get_non_links(driver, address):
             actions.move_to_element(e)
             e.click()
             sleep(rand(3, 5))
-            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-
+            actions.send_keys(Keys.ESCAPE).perform()
             sleep(rand(3, 5))
             e.click()
-            print("clicked %s" % e.get_attribute('id'))
+            #print("clicked %s" % e.get_attribute('id'))
             sleep(rand(3, 5))
-            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-
+            actions.send_keys(Keys.ESCAPE).perform()
             same_page_ids.append(e.get_attribute('id'))
         except StaleElementReferenceException:
-            #driver.execute_script("window.history.go(-1)")
             driver.get(address)
 
             sleep(rand(3, 5))
@@ -92,21 +90,18 @@ def get_non_links(driver, address):
             actions.move_to_element(element)
             element.click()
             sleep(rand(3, 5))
-            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-
+            actions.send_keys(Keys.ESCAPE).perform()
             sleep(rand(3, 5))
             element.click()
             sleep(rand(3, 5))
-            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-
+            #print("clicked %s" % element.get_attribute('class'))
+            actions.send_keys(Keys.ESCAPE).perform()
             same_page_link_class.append(this_class)
         except StaleElementReferenceException:
-            #driver.execute_script("window.history.go(-1)")
             driver.get(address)
             sleep(rand(3, 5))
         except (ElementNotVisibleException, WebDriverException):
             pass
-    driver.close()
     global id_of_elements, class_of_elements
     id_of_elements = same_page_ids
     class_of_elements = same_page_link_class
@@ -157,6 +152,10 @@ def left_click(driver, count):
             break
         sleep(rand(5, 8))
         list_choice = choice([id_of_elements, class_of_elements])
+        if len(id_of_elements) == 0:
+            list_choice = class_of_elements
+        elif len(class_of_elements) == 0:
+            list_choice = id_of_elements
         if list_choice == id_of_elements:
             try:
                 element = choice(id_of_elements)
@@ -167,6 +166,10 @@ def left_click(driver, count):
                 print("clicked ID %s" % element)
                 sleep(rand(1, 2))
                 webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+                try:
+                    actions.move_to_element(e)
+                except StaleElementReferenceException:
+                    driver.get(site)
             except StaleElementReferenceException:
                 if driver.current_url != site:
                     driver.get(site)
@@ -183,6 +186,10 @@ def left_click(driver, count):
                 print("clicked class %s" % element)
                 sleep(rand(1, 2))
                 webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+                try:
+                    actions.move_to_element(e)
+                except StaleElementReferenceException:
+                    driver.get(site)
             except StaleElementReferenceException:
                 if driver.current_url != site:
                     driver.get(site)
@@ -223,7 +230,6 @@ def set_parameters(min_pause_time_in, max_pause_time_in, scroll_count_in, key_pr
     scroll_count = int(scroll_count_in)
     key_to_press = str(key_press_in)
     click_count = int(click_count_in)
-    print(min_pause_time, max_pause_time, scroll_count, key_to_press, click_count)
 
 
 def update_script(new_script):
@@ -303,7 +309,7 @@ def make_proxy_list(filepath):
 
 
 class Worker(Thread):
-    global site, min_time, max_time, target
+    global site, min_time, max_time, target, bot_count
 
     def __init__(self, options):
         super(Worker, self).__init__()
@@ -312,14 +318,14 @@ class Worker(Thread):
     def run(self):
         try:
             start_time = time()
-            print("Bot started on page: " + site)
+            bot_number = bot_count
+            print("Bot %d started on page: " % bot_number + site)
             run_time = rand(min_time, max_time)
             xpath_time = int(run_time / 2) + rand(0, int(run_time / 6))
             driver = webdriver.Chrome(chrome_options=self.options)
             driver.get(site)
             sleep(rand(3, 5))
             script_list = process_script(driver)
-            print("Added script")
             target_clicked = False
             while time() - start_time <= run_time:
                 for t in script_list:
@@ -328,7 +334,8 @@ class Worker(Thread):
                         click_target(driver, target)
                         target_clicked = True
         except Exception as e:
-            print("Bot crashed")
+            print("Bot %d crashed with the following error:" % bot_number)
+            print(e)
         finally:
             driver.close()
             global active_threads
@@ -337,20 +344,46 @@ class Worker(Thread):
 
 
 def run_threads():
-    global active_threads, site, id_of_elements, class_of_elements, script_pre
+    global active_threads, site, id_of_elements, class_of_elements, script_pre, bot_count
+    bot_count = 1
     active_threads = 0
-    if not windows:
-        chrome_options.add_argument("--headless")
+    j = 0
+    #if not windows:
+        #chrome_options.add_argument("--headless")
     print("Generating list of elements to click...")
-    #first_driver = webdriver.Chrome()
-    #get_non_links(first_driver, site)
-    print('Finished. %d elements were found' % (len(id_of_elements)+len(class_of_elements)))
-    print("Starting threads...")
+    while j < 10:
+        try:
+            if len(proxy_list) != 0:
+                chrome_options.arguments.clear()
+                chrome_options.add_argument(proxy_list.index(j))
+                #if not windows:
+                    #chrome_options.add_argument("--headless")
+            first_driver = webdriver.Chrome(chrome_options=chrome_options)
+            first_driver.get(site)
+            sleep(rand(5, 8))
+            get_non_links(first_driver, site)
+            print('Finished. %d elements were found' % (len(id_of_elements) + len(class_of_elements)))
+            break
+        except Exception as e:
+            print('There was a error while finding links to click:')
+            print(e)
+            if len(proxy_list) != 0:
+                print("The issue is most likely with proxy #%d" % j + 1)
+            if j == 9 or len(proxy_list) == 0:
+                print("Could not find links to click, check proxy and website settings then retry")
+                return
+            j += 1
+        finally:
+            first_driver.close()
+        print("Starting threads...")
+
+
     while 1:
         if len(proxy_list) == 0 and active_threads < max_threads:
             thread = Worker(chrome_options)
             thread.start()
             active_threads += 1
+            bot_count += 1
             print(str(active_threads) + " bots are active")
             sleep(4)
         elif len(proxy_list) != 0 and active_threads < max_threads:
@@ -364,6 +397,7 @@ def run_threads():
                 thread = Worker(chrome_options)
                 thread.start()
                 active_threads += 1
+                bot_count += 1
                 print(str(active_threads) + " bots are active")
                 sleep(4)
         else:

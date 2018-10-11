@@ -5,6 +5,7 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 # from flask.ext.sqlalchemy import SQLAlchemy
 import logging
+import random, threading, webbrowser
 from logging import Formatter, FileHandler
 from forms import *
 import os
@@ -133,13 +134,9 @@ if not app.debug:
 # Launch.
 #----------------------------------------------------------------------------#
 
-# Default port:
 if __name__ == '__main__':
-    app.run()
+    port = 5000 + random.randint(0, 999)
+    url = "http://127.0.0.1:{0}".format(port)
+    threading.Timer(2.0, lambda: webbrowser.open(url)).start()
+    app.run(port=port, debug=False)
 
-# Or specify port manually:
-'''
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
-'''
