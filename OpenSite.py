@@ -348,16 +348,24 @@ def run_threads():
     bot_count = 1
     active_threads = 0
     j = 0
-    #if not windows:
-        #chrome_options.add_argument("--headless")
+    if not windows:
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument("window-size=1920,1080")
+        chrome_options.add_argument(
+            "--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'")
     print("Generating list of elements to click...")
     while j < 10:
         try:
             if len(proxy_list) != 0:
                 chrome_options.arguments.clear()
                 chrome_options.add_argument(proxy_list.index(j))
-                #if not windows:
-                    #chrome_options.add_argument("--headless")
+                if not windows:
+                    chrome_options.add_argument("--headless")
+                    chrome_options.add_argument('--disable-gpu')
+                    chrome_options.add_argument("window-size=1920,1080")
+                    chrome_options.add_argument(
+                        "--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'")
             first_driver = webdriver.Chrome(chrome_options=chrome_options)
             first_driver.get(site)
             sleep(rand(5, 8))
@@ -376,8 +384,6 @@ def run_threads():
         finally:
             first_driver.close()
         print("Starting threads...")
-
-
     while 1:
         if len(proxy_list) == 0 and active_threads < max_threads:
             thread = Worker(chrome_options)
@@ -392,6 +398,9 @@ def run_threads():
                 chrome_options.add_argument(p)
                 if not windows:
                     chrome_options.add_argument("--headless")
+                    chrome_options.add_argument('--disable-gpu')
+                    chrome_options.add_argument("window-size=1920,1080")
+                    chrome_options.add_argument("--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'")
                 while active_threads == max_threads:
                     sleep(10)
                 thread = Worker(chrome_options)
