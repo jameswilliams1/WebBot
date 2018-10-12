@@ -328,12 +328,14 @@ def update_proxy(new_proxy):
 def clear_proxy():
     chrome_options.arguments.clear()
     proxy_list.clear()
+    chrome_options.add_argument("--log-level=3")
 
 
 def change_proxy(ip, port):
     clear_proxy()
     proxy_arg = ip + ":" + str(port)
     chrome_options.add_argument('--proxy-server=%s' % proxy_arg)
+    chrome_options.add_argument("--log-level=3")
 
 
 def make_proxy_list(filepath):
@@ -395,7 +397,8 @@ def run_threads():
         try:
             if len(proxy_list) != 0:
                 chrome_options.arguments.clear()
-                chrome_options.add_argument(proxy_list.index(j))
+                chrome_options.add_argument(proxy_list[j])
+                chrome_options.add_argument("--log-level=3")
                 if not windows:
                     chrome_options.add_argument("--headless")
                     chrome_options.add_argument('--disable-gpu')
@@ -429,6 +432,7 @@ def run_threads():
             for p in proxy_list:
                 chrome_options.arguments.clear()
                 chrome_options.add_argument(p)
+                chrome_options.add_argument("--log-level=3")
                 if not windows:
                     chrome_options.add_argument("--headless")
                     chrome_options.add_argument('--disable-gpu')
