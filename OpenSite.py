@@ -4,6 +4,9 @@ from random import randrange, choice
 from selenium.common.exceptions import StaleElementReferenceException, InvalidSelectorException, ElementNotVisibleException, WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from threading import Thread, Event
 import string
 
@@ -23,9 +26,9 @@ max_pause_time = 0
 scroll_count = 0
 key_to_press = ""
 click_count = 0
-id_of_elements = []
-class_of_elements = []
 bot_count = 0
+same_page_ids = []
+same_page_class = []
 
 
 def rand(min_time, max_time):
@@ -38,14 +41,75 @@ def rand(min_time, max_time):
     return min_time + randrange(0, (max_time-min_time) * 1000) / 1000
 
 
-def get_non_links(driver, address):
-    actions = ActionChains(driver)
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+
+class ListWorker(Thread):
+    global site, same_page_ids, same_page_class
+
+    def __init__(self, options, list_of_el, list_type):
+        super(ListWorker, self).__init__()
+        self.options = options
+        self.list_of_el = list_of_el
+        self.list_type = list_type
+
+    def run(self):
+        driver = webdriver.Chrome(chrome_options=self.options)
+        driver.get(site)
+        if self.list_type == 'id':
+            for e_id in self.list_of_el:
+                try:
+                    e = driver.find_element_by_id(e_id)
+                    ActionChains(driver).move_to_element(e)
+                    e.click()
+                    #print("clicked id %s" % e.get_attribute('id'))
+                    sleep(rand(3, 5))
+                    ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+                    WebDriverWait(driver, 6).until(EC.visibility_of(e))
+                    e.click()
+                    sleep(rand(3, 5))
+                    ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+                    same_page_ids.append(e.get_attribute('id'))
+                except StaleElementReferenceException:
+                    driver.get(site)
+                    sleep(rand(3, 5))
+                except (ElementNotVisibleException, WebDriverException):
+                    pass
+        elif self.list_type == 'class':
+            for this_class in self.list_of_el:
+                try:
+                    e = driver.find_element_by_class_name(this_class)
+                    ActionChains(driver).move_to_element(e)
+                    e.click()
+                    #print("clicked class %s" % e.get_attribute('class'))
+                    sleep(rand(3, 5))
+                    ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+                    WebDriverWait(driver, 6).until(EC.visibility_of(e))
+                    e.click()
+                    sleep(rand(3, 5))
+                    ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+                    same_page_class.append(this_class)
+                except StaleElementReferenceException:
+                    driver.get(site)
+                    sleep(rand(3, 5))
+                except (ElementNotVisibleException, WebDriverException):
+                    pass
+        driver.close()
+
+
+def get_non_links(chrome_options):
+    global site, same_page_class, same_page_ids
+    same_page_class.clear()
+    same_page_ids.clear()
     # Find elements in body that have an ID
-    driver.get(address)
-    sleep(rand(4, 8))
+    driver = webdriver.Chrome(chrome_options=chrome_options)
+    driver.get(site)
+    #sleep(rand(4, 8))
     elements_with_id = driver.find_elements_by_xpath("//body//*[@id]")
     elements_ids = []
-    same_page_ids = []
     for e in elements_with_id:
         try:
             elements_ids.append(e.get_attribute('id'))
@@ -53,58 +117,30 @@ def get_non_links(driver, address):
             pass
     # Remove duplicates
     elements_ids = list(set(elements_ids))
-    for e_id in elements_ids:
-        try:
-            # Following sequence will fail if page changes
-            e = driver.find_element_by_id(e_id)
-            actions.move_to_element(e)
-            e.click()
-            sleep(rand(3, 5))
-            actions.send_keys(Keys.ESCAPE).perform()
-            sleep(rand(3, 5))
-            e.click()
-            #print("clicked %s" % e.get_attribute('id'))
-            sleep(rand(3, 5))
-            actions.send_keys(Keys.ESCAPE).perform()
-            same_page_ids.append(e.get_attribute('id'))
-        except StaleElementReferenceException:
-            driver.get(address)
-
-            sleep(rand(3, 5))
-        except (ElementNotVisibleException, WebDriverException):
-            pass
-    driver.get(address)
+    driver.get(site)
     # Find links with a class
-    links = driver.find_elements_by_xpath('//body//*[@class]')
-    link_class = []
-    for e in links:
+    elements_with_class = driver.find_elements_by_xpath('//body//*[@class]')
+    element_class = []
+    for e in elements_with_class:
         try:
-            link_class.append(e.get_attribute('class'))
+            element_class.append(e.get_attribute('class'))
         except StaleElementReferenceException:
             pass
-    link_class = list(set(link_class))
-    same_page_link_class = []
-    for this_class in link_class:
-        try:
-            element = driver.find_element_by_class_name(this_class)
-            actions.move_to_element(element)
-            element.click()
-            sleep(rand(3, 5))
-            actions.send_keys(Keys.ESCAPE).perform()
-            sleep(rand(3, 5))
-            element.click()
-            sleep(rand(3, 5))
-            #print("clicked %s" % element.get_attribute('class'))
-            actions.send_keys(Keys.ESCAPE).perform()
-            same_page_link_class.append(this_class)
-        except StaleElementReferenceException:
-            driver.get(address)
-            sleep(rand(3, 5))
-        except (ElementNotVisibleException, WebDriverException):
-            pass
-    global id_of_elements, class_of_elements
-    id_of_elements = same_page_ids
-    class_of_elements = same_page_link_class
+    element_class = list(set(element_class))
+    driver.close()
+    split_id_list = chunks(elements_ids, 10)
+    split_class_list = chunks(element_class, 10)
+    thread_list = []
+    for sub_id_list in split_id_list:
+        thread = ListWorker(chrome_options, sub_id_list, 'id')
+        thread.start()
+        thread_list.append(thread)
+    for sub_class_list in split_class_list:
+        thread = ListWorker(chrome_options, sub_class_list, 'class')
+        thread.start()
+        thread_list.append(thread)
+    for t in thread_list:
+        t.join()
 
 
 def scroll_up(driver, count):
@@ -140,7 +176,7 @@ def press_key(driver):
 def left_click(driver, count):
     """Clicks random element from random list, repeats for count times."""
     global site
-    if len(id_of_elements) == 0 and len(class_of_elements) == 0:
+    if len(same_page_ids) == 0 and len(same_page_class) == 0:
         print('No elements are present that can be clicked')
         return
     actions = ActionChains(driver)
@@ -151,14 +187,14 @@ def left_click(driver, count):
             print("Failed to complete all clicks")
             break
         sleep(rand(5, 8))
-        list_choice = choice([id_of_elements, class_of_elements])
-        if len(id_of_elements) == 0:
-            list_choice = class_of_elements
-        elif len(class_of_elements) == 0:
-            list_choice = id_of_elements
-        if list_choice == id_of_elements:
+        list_choice = choice([same_page_ids, same_page_class])
+        if len(same_page_ids) == 0:
+            list_choice = same_page_class
+        elif len(same_page_class) == 0:
+            list_choice = same_page_ids
+        if list_choice == same_page_ids:
             try:
-                element = choice(id_of_elements)
+                element = choice(same_page_ids)
                 e = driver.find_element_by_id(element)
                 actions.move_to_element(e)
                 e.click()
@@ -176,9 +212,9 @@ def left_click(driver, count):
                 pass
             except WebDriverException:
                 pass
-        elif list_choice == class_of_elements:
+        elif list_choice == same_page_class:
             try:
-                element = choice(class_of_elements)
+                element = choice(same_page_class)
                 e = driver.find_element_by_class_name(element)
                 actions.move_to_element(e)
                 e.click()
@@ -344,7 +380,7 @@ class Worker(Thread):
 
 
 def run_threads():
-    global active_threads, site, id_of_elements, class_of_elements, script_pre, bot_count
+    global active_threads, site, same_page_ids, same_page_class, script_pre, bot_count
     bot_count = 1
     active_threads = 0
     j = 0
@@ -355,7 +391,7 @@ def run_threads():
         chrome_options.add_argument(
             "--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'")
     print("Generating list of elements to click...")
-    while j < 10:
+    while j < 5:
         try:
             if len(proxy_list) != 0:
                 chrome_options.arguments.clear()
@@ -366,24 +402,21 @@ def run_threads():
                     chrome_options.add_argument("window-size=1920,1080")
                     chrome_options.add_argument(
                         "--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'")
-            first_driver = webdriver.Chrome(chrome_options=chrome_options)
-            first_driver.get(site)
-            sleep(rand(5, 8))
-            get_non_links(first_driver, site)
-            print('Finished. %d elements were found' % (len(id_of_elements) + len(class_of_elements)))
+            get_non_links(chrome_options)
             break
         except Exception as e:
             print('There was a error while finding links to click:')
             print(e)
             if len(proxy_list) != 0:
                 print("The issue is most likely with proxy #%d" % j + 1)
-            if j == 9 or len(proxy_list) == 0:
-                print("Could not find links to click, check proxy and website settings then retry")
-                return
-            j += 1
+            if j == 4 or len(proxy_list) == 0:
+                print("Could not find links to click, check proxy and website settings")
+                break
         finally:
-            first_driver.close()
-        print("Starting threads...")
+            j += 1
+    if len(same_page_ids) + len(same_page_class) > 0:
+        print('Finished. %d elements were found' % (len(same_page_ids) + len(same_page_class)))
+    print("Starting threads...")
     while 1:
         if len(proxy_list) == 0 and active_threads < max_threads:
             thread = Worker(chrome_options)
@@ -411,8 +444,3 @@ def run_threads():
                 sleep(4)
         else:
             sleep(10)
-
-
-
-
-
