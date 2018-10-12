@@ -120,15 +120,10 @@ def not_found_error(error):
     return render_template('errors/404.html'), 404
 
 
+log = logging.getLogger('werkzeug')
 if not app.debug:
-    file_handler = FileHandler('error.log')
-    file_handler.setFormatter(
-        Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-    )
-    app.logger.setLevel(logging.INFO)
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.info('errors')
+    app.logger.disabled = True
+    log.disabled = True
 
 #----------------------------------------------------------------------------#
 # Launch.
@@ -138,5 +133,6 @@ if __name__ == '__main__':
     port = 5000 + random.randint(0, 999)
     url = "http://127.0.0.1:{0}".format(port)
     threading.Timer(2.0, lambda: webbrowser.open(url)).start()
+    print("Bot server running on %s" % url)
     app.run(port=port, debug=False)
 
