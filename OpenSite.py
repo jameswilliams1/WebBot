@@ -1,18 +1,18 @@
 from selenium import webdriver
 from time import sleep, time
-from random import randrange, choice
+from random import randrange, choice, randint
 from selenium.common.exceptions import StaleElementReferenceException, InvalidSelectorException, ElementNotVisibleException, WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from threading import Thread, Event
+from threading import Thread
 import string
 
 site = ""
 target = ""
 max_threads = 0
+max_startup_threads = 0
 min_time = 0
 max_time = 0
 active_threads = 0
@@ -23,12 +23,19 @@ windows = True
 script_pre = []
 min_pause_time = 0
 max_pause_time = 0
-scroll_count = 0
+min_scroll = 0
+max_scroll = 0
 key_to_press = ""
-click_count = 0
+min_click = 0
+max_click = 0
 bot_count = 0
 same_page_ids = []
 same_page_class = []
+active_start = 0
+total_run_threads = 0
+main_thread_list = []
+min_xpath_time = 0
+max_xpath_time = 0
 
 
 def rand(min_time, max_time):
@@ -98,10 +105,12 @@ class ListWorker(Thread):
                 except (ElementNotVisibleException, WebDriverException):
                     pass
         driver.close()
+        global active_start
+        active_start -= 1
 
 
 def get_non_links(chrome_options):
-    global site, same_page_class, same_page_ids
+    global site, same_page_class, same_page_ids, max_startup_threads, active_start
     same_page_class.clear()
     same_page_ids.clear()
     # Find elements in body that have an ID
@@ -131,14 +140,27 @@ def get_non_links(chrome_options):
     split_id_list = chunks(elements_ids, 10)
     split_class_list = chunks(element_class, 10)
     thread_list = []
+    active_start = 0
     for sub_id_list in split_id_list:
-        thread = ListWorker(chrome_options, sub_id_list, 'id')
-        thread.start()
-        thread_list.append(thread)
+        while 1:
+            if active_start < max_startup_threads:
+                thread = ListWorker(chrome_options, sub_id_list, 'id')
+                thread.start()
+                thread_list.append(thread)
+                active_start += 1
+                break
+            else:
+                sleep(2)
     for sub_class_list in split_class_list:
-        thread = ListWorker(chrome_options, sub_class_list, 'class')
-        thread.start()
-        thread_list.append(thread)
+        while 1:
+            if active_start < max_startup_threads:
+                thread = ListWorker(chrome_options, sub_class_list, 'class')
+                thread.start()
+                thread_list.append(thread)
+                active_start += 1
+                break
+            else:
+                sleep(2)
     for t in thread_list:
         t.join()
 
@@ -259,13 +281,15 @@ def random_key():
     return choice(all_keys)
 
 
-def set_parameters(min_pause_time_in, max_pause_time_in, scroll_count_in, key_press_in, click_count_in):
-    global min_pause_time, max_pause_time, scroll_count, key_to_press, click_count
+def set_parameters(min_pause_time_in, max_pause_time_in, min_scroll_count_in, max_scroll_count_in, key_press_in, min_click_in, max_click_in):
+    global min_pause_time, max_pause_time, min_scroll, max_scroll, key_to_press, min_click, max_click
     min_pause_time = int(min_pause_time_in)
     max_pause_time = int(max_pause_time_in)
-    scroll_count = int(scroll_count_in)
+    min_scroll = int(min_scroll_count_in)
+    max_scroll = int(max_scroll_count_in)
     key_to_press = str(key_press_in)
-    click_count = int(click_count_in)
+    min_click = int(min_click_in)
+    max_click = int(max_click_in)
 
 
 def update_script(new_script):
@@ -280,13 +304,13 @@ def process_script(driver):
         if i == 'sleep':
             script.append((sleep, rand(min_pause_time, max_pause_time)))
         elif i == 'scroll_up':
-            script.append((scroll_up, driver, scroll_count))
+            script.append((scroll_up, driver, randint(min_scroll, max_scroll)))
         elif i == 'scroll_down':
-            script.append((scroll_down, driver, scroll_count))
+            script.append((scroll_down, driver, randint(min_scroll, max_scroll)))
         elif i == 'press_key':
             script.append((press_key, driver))
         elif i == 'left_click':
-            script.append((left_click, driver, click_count))
+            script.append((left_click, driver, randint(min_click, max_click)))
     return script
 
 
@@ -310,9 +334,19 @@ def update_threads(new_count):
     max_threads = new_count
 
 
+def update_startup_threads(new_count):
+    global max_startup_threads
+    max_startup_threads = new_count
+
+
 def update_min(new_min):
     global min_time
     min_time = new_min
+
+
+def update_total_bots(new_count):
+    global total_run_threads
+    total_run_threads = new_count
 
 
 def update_max(new_max):
@@ -346,8 +380,14 @@ def make_proxy_list(filepath):
     proxy_list = ['--proxy-server=%s' % p for p in address_list]
 
 
+def update_xpath_time(min_xpath, max_xpath):
+    global min_xpath_time, max_xpath_time
+    min_xpath_time = min_xpath
+    max_xpath_time = max_xpath
+
+
 class Worker(Thread):
-    global site, min_time, max_time, target, bot_count
+    global site, min_time, max_time, target, bot_count, min_xpath_time, max_xpath_time
 
     def __init__(self, options):
         super(Worker, self).__init__()
@@ -356,10 +396,10 @@ class Worker(Thread):
     def run(self):
         try:
             start_time = time()
-            bot_number = bot_count
+            bot_number = bot_count + 1
             print("Bot %d started on page: " % bot_number + site)
             run_time = rand(min_time, max_time)
-            xpath_time = int(run_time / 2) + rand(0, int(run_time / 6))
+            xpath_time = rand(min_xpath_time, max_xpath_time)
             driver = webdriver.Chrome(chrome_options=self.options)
             driver.get(site)
             sleep(rand(3, 5))
@@ -382,8 +422,8 @@ class Worker(Thread):
 
 
 def run_threads():
-    global active_threads, site, same_page_ids, same_page_class, script_pre, bot_count
-    bot_count = 1
+    global active_threads, site, same_page_ids, same_page_class, script_pre, bot_count, max_threads, total_run_threads, main_thread_list
+    bot_count = 0
     active_threads = 0
     j = 0
     if not windows:
@@ -420,14 +460,15 @@ def run_threads():
     if len(same_page_ids) + len(same_page_class) > 0:
         print('Finished. %d elements were found' % (len(same_page_ids) + len(same_page_class)))
     print("Starting threads...")
-    while 1:
+    while bot_count < total_run_threads:
         if len(proxy_list) == 0 and active_threads < max_threads:
             thread = Worker(chrome_options)
+            main_thread_list.append(thread)
             thread.start()
             active_threads += 1
             bot_count += 1
             print(str(active_threads) + " bots are active")
-            sleep(4)
+            sleep(0.5)
         elif len(proxy_list) != 0 and active_threads < max_threads:
             for p in proxy_list:
                 chrome_options.arguments.clear()
@@ -441,10 +482,15 @@ def run_threads():
                 while active_threads == max_threads:
                     sleep(10)
                 thread = Worker(chrome_options)
+                main_thread_list.append(thread)
                 thread.start()
                 active_threads += 1
                 bot_count += 1
                 print(str(active_threads) + " bots are active")
-                sleep(4)
+                sleep(0.5)
         else:
-            sleep(10)
+            sleep(2)
+    for tr in main_thread_list:
+        thread.join()
+        sleep(5)
+    print("Finished: %s bots were ran" % bot_count)

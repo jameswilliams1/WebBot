@@ -32,9 +32,14 @@ def home():
             OpenSite.update_site(form.website.data)
             OpenSite.update_target(form.xpath.data)
             OpenSite.update_threads(form.threads.data)
+            OpenSite.update_startup_threads(form.start_threads.data)
             OpenSite.update_min(form.time_min.data)
             OpenSite.update_max(form.time_max.data)
             OpenSite.show_windows(form.display_windows.data)
+            total_number_bots = form.total_bots.data
+            if total_number_bots == 0:
+                total_number_bots = 999999999
+            OpenSite.update_total_bots(int(total_number_bots))
             flash("Website details saved")
             return redirect('/proxy')
         else:
@@ -92,8 +97,9 @@ def script():
         key_to_press = form.key_press.data
         if len(key_to_press) == 0:
             key_to_press = OpenSite.random_key()
-        OpenSite.set_parameters(int(form.pause_time_min.data), int(form.pause_time_max.data), int(form.scroll_count.data), str(key_to_press), int(form.click_count.data))
+        OpenSite.set_parameters(int(form.pause_time_min.data), int(form.pause_time_max.data), int(form.min_scroll_count.data), int(form.max_scroll_count.data), str(key_to_press), int(form.min_click_count.data), int(form.max_click_count.data))
         OpenSite.update_script(form.script_items.data)
+        OpenSite.update_xpath_time(int(form.min_xpath.data), int(form.max_xpath.data))
         flash("Settings saved")
     return render_template('pages/script.html', form=form)
 
