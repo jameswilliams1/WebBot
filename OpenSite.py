@@ -302,15 +302,27 @@ def process_script(driver):
     script = []
     for i in script_pre:
         if i == 'sleep':
-            script.append((sleep, rand(min_pause_time, max_pause_time)))
+            if min_pause_time == max_pause_time:
+                script.append((sleep, min_pause_time))
+            else:
+                script.append((sleep, rand(min_pause_time, max_pause_time)))
         elif i == 'scroll_up':
-            script.append((scroll_up, driver, randint(min_scroll, max_scroll)))
+            if min_scroll == max_scroll:
+                script.append((scroll_up, driver, min_scroll))
+            else:
+                script.append((scroll_up, driver, randint(min_scroll, max_scroll)))
         elif i == 'scroll_down':
-            script.append((scroll_down, driver, randint(min_scroll, max_scroll)))
+            if min_scroll == max_scroll:
+                script.append((scroll_up, driver, min_scroll))
+            else:
+                script.append((scroll_down, driver, randint(min_scroll, max_scroll)))
         elif i == 'press_key':
             script.append((press_key, driver))
         elif i == 'left_click':
-            script.append((left_click, driver, randint(min_click, max_click)))
+            if min_click == max_click:
+                script.append((left_click, driver, min_click))
+            else:
+                script.append((left_click, driver, randint(min_click, max_click)))
     return script
 
 
@@ -398,8 +410,16 @@ class Worker(Thread):
             start_time = time()
             bot_number = bot_count + 1
             print("Bot %d started on page: " % bot_number + site)
-            run_time = rand(min_time, max_time)
-            xpath_time = rand(min_xpath_time, max_xpath_time)
+            run_time = 0
+            if min_time == max_time:
+                run_time = min_time
+            else:
+                run_time = rand(min_time, max_time)
+            xpath_time = 0
+            if min_xpath_time == max_xpath_time:
+                xpath_time = min_xpath_time
+            else:
+                xpath_time = rand(min_xpath_time, max_xpath_time)
             driver = webdriver.Chrome(chrome_options=self.options)
             driver.get(site)
             sleep(rand(3, 5))

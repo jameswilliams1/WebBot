@@ -14,14 +14,14 @@
     <input type="submit" value="Add item" name="submit" class="btn btn-lg btn-primary btn-block" formnovalidate/>
     <br/><br/>
     {{ form.pause_time_min(class_ = 'form-control first-input last-input', placeholder = form.pause_time_min.label.text, required=true, type="number", min="0", step="1") }}
-    {{ form.pause_time_max(class_ = 'form-control first-input last-input', placeholder = form.pause_time_max.label.text, required=true, type="number", min="0", step="1") }}
+    {{ form.pause_time_max(class_ = 'form-control first-input last-input', placeholder = form.pause_time_max.label.text, required=true, type="number", min="1", step="1") }}
     {{ form.min_scroll_count(class_ = 'form-control first-input last-input', placeholder = form.min_scroll_count.label.text, required=true, type="number", min="0", step="1") }}
-    {{ form.max_scroll_count(class_ = 'form-control first-input last-input', placeholder = form.max_scroll_count.label.text, required=true, type="number", min="0", step="1") }}
+    {{ form.max_scroll_count(class_ = 'form-control first-input last-input', placeholder = form.max_scroll_count.label.text, required=true, type="number", min="1", step="1") }}
     {{ form.key_press(class_ = 'form-control first-input last-input', placeholder = form.key_press.label.text, pattern="[a-zA-Z0-9]") }}
         {{ form.min_click_count(class_ = 'form-control first-input last-input', placeholder = form.min_click_count.label.text, required=true, type="number", min="0", step="1") }}
-    {{ form.max_click_count(class_ = 'form-control first-input last-input', placeholder = form.max_click_count.label.text, required=true, type="number", min="0", step="1") }}
+    {{ form.max_click_count(class_ = 'form-control first-input last-input', placeholder = form.max_click_count.label.text, required=true, type="number", min="1", step="1") }}
     {{ form.min_xpath(class_ = 'form-control first-input last-input', placeholder = form.min_xpath.label.text, required=true, type="number", min="0", step="1") }}
-    {{ form.max_xpath(class_ = 'form-control first-input last-input', placeholder = form.max_xpath.label.text, required=true, type="number", min="0", step="1") }}
+    {{ form.max_xpath(class_ = 'form-control first-input last-input', placeholder = form.max_xpath.label.text, required=true, type="number", min="1", step="1") }}
     <input type="submit" value="Save" name="submit" class="btn btn-lg btn-primary btn-block"/>
   </form>
 
